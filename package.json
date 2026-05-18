@@ -1,0 +1,14 @@
+{
+  "name": "tesla-careers-applier",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automate Tesla internship applications from a local Chrome session.",
+  "scripts": {
+    "list": "node scripts/apply_tesla_roles.js --mode list",
+    "dry-run": "node scripts/apply_tesla_roles.js --mode dry-run",
+    "submit": "node scripts/apply_tesla_roles.js --mode submit"
+  },
+  "dependencies": {
+    "playwright": "^1.54.1"
+  }
+}

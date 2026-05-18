@@ -1,0 +1,4 @@
+node_modules/
+profile.local.json
+SKILL.md
+*.log

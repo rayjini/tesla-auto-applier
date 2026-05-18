@@ -1,0 +1,25 @@
+{
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "legalName": "Jane Doe",
+  "phone": "5551234567",
+  "email": "jane.doe@example.com",
+  "country": "United States",
+  "resumePath": "/absolute/path/to/resume.pdf",
+  "graduationDate": {
+    "month": "April 2027",
+    "day": "30"
+  },
+  "durationLabel": "4 months",
+  "considerOtherRoles": "yes",
+  "sponsorship": "no",
+  "formerEmployee": "no",
+  "formerInternOrContractor": "no",
+  "universityStudent": "yes",
+  "textConsent": "yes",
+  "thesis": "no",
+  "gender": "Prefer not to answer",
+  "veteran": "I am not a protected veteran",
+  "race": "Prefer not to answer",
+  "disability": "I do not want to answer"
+}
