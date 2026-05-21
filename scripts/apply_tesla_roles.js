@@ -4,6 +4,7 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
+const SUBMITTED_JOBS_PATH = path.join(ROOT_DIR, 'submitted_jobs.json');
 const PROFILE_PATHS = [
   path.join(ROOT_DIR, 'profile.local.json'),
   path.join(ROOT_DIR, 'profile.json')
@@ -71,6 +72,42 @@ function argSet(name) {
 
 function slowMs() {
   return Number(argValue('--slow-ms', '0'));
+}
+
+function hasFlag(name) {
+  return process.argv.includes(name);
+}
+
+function loadSubmittedJobs() {
+  if (!fs.existsSync(SUBMITTED_JOBS_PATH)) {
+    return new Map();
+  }
+
+  try {
+    const entries = JSON.parse(fs.readFileSync(SUBMITTED_JOBS_PATH, 'utf8'));
+    return new Map(entries.map((entry) => [String(entry.id), entry]));
+  } catch (error) {
+    throw new Error(`Could not parse ${path.basename(SUBMITTED_JOBS_PATH)}: ${error.message}`);
+  }
+}
+
+function saveSubmittedJobs(submittedJobs) {
+  const entries = [...submittedJobs.values()].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  fs.writeFileSync(SUBMITTED_JOBS_PATH, `${JSON.stringify(entries, null, 2)}\n`);
+}
+
+function rememberSubmittedJob(submittedJobs, job, status) {
+  if (!['submitted-confirmation-reached', 'already-submitted-or-confirmed'].includes(status)) {
+    return;
+  }
+
+  submittedJobs.set(String(job.id), {
+    id: String(job.id),
+    title: job.title,
+    status,
+    savedAt: new Date().toISOString()
+  });
+  saveSubmittedJobs(submittedJobs);
 }
 
 async function pause(page, multiplier = 1) {
@@ -359,10 +396,13 @@ async function applyJob(page, job, shouldSubmit) {
   const ids = argSet('--ids');
   const skip = argSet('--skip');
   const limit = Number(argValue('--limit', '0'));
+  const ignoreHistory = hasFlag('--ignore-history');
+  const submittedJobs = loadSubmittedJobs();
   const { browser, context, page } = await getPage();
   await installSubmitPayloadSanitizer(context);
   const jobs = (await eligibleJobs(page)).filter((job) => (!ids.size || ids.has(job.id)) && !skip.has(job.id));
-  const selected = limit > 0 ? jobs.slice(0, limit) : jobs;
+  const pendingJobs = ignoreHistory ? jobs : jobs.filter((job) => !submittedJobs.has(String(job.id)));
+  const selected = limit > 0 ? pendingJobs.slice(0, limit) : pendingJobs;
   if (mode === 'list') {
     console.log(JSON.stringify(selected, null, 2));
     await browser.close();
@@ -373,6 +413,7 @@ async function applyJob(page, job, shouldSubmit) {
   for (const job of selected) {
     try {
       results.push(await applyJob(page, job, shouldSubmit));
+      rememberSubmittedJob(submittedJobs, job, results[results.length - 1].status);
       console.log(JSON.stringify(results[results.length - 1], null, 2));
     } catch (error) {
       const failure = { id: job.id, title: job.title, status: 'error', error: error.message };

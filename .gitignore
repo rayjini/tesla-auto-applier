@@ -1,4 +1,5 @@
 node_modules/
 profile.local.json
 SKILL.md
+submitted_jobs.json
 *.log

@@ -7,6 +7,7 @@ The repo is set up so you can keep private data out of Git:
 - `profile.json` is the tracked template / shared config.
 - `profile.local.json` is optional and ignored by Git.
 - If `profile.local.json` exists, the script uses it instead of `profile.json`.
+- `submitted_jobs.json` is created locally and ignored by Git to prevent duplicate submissions on later runs.
 
 ## Requirements
 
@@ -55,6 +56,8 @@ Submit the full eligible queue:
 npm run submit
 ```
 
+By default, the script skips any requisition IDs already recorded in `submitted_jobs.json`.
+
 Submit only specific job IDs:
 
 ```bash
@@ -71,6 +74,12 @@ Run only a limited number of jobs:
 
 ```bash
 node scripts/apply_tesla_roles.js --mode submit --limit 3
+```
+
+Force a rerun even if an ID is already in the local submission history:
+
+```bash
+node scripts/apply_tesla_roles.js --mode submit --ids 269812 --ignore-history
 ```
 
 ## Running With An Agent
@@ -125,6 +134,7 @@ Edit these fields in `profile.json` or `profile.local.json`:
 - `--ids 269812,267004`: Run only specific requisition IDs
 - `--skip 269812,267004`: Skip specific requisition IDs
 - `--limit 3`: Process only the first N matching jobs
+- `--ignore-history`: Ignore `submitted_jobs.json` and reconsider previously successful IDs
 - `--slow-ms 1000`: Add delays between steps if Tesla gets flaky
 
 ## Notes
@@ -132,4 +142,5 @@ Edit these fields in `profile.json` or `profile.local.json`:
 - The script expects a visible Chrome window with remote debugging enabled on `127.0.0.1:9222`.
 - It filters for US Tesla internships that match software / data / technical role patterns in the script.
 - It includes a submit-payload fix for Tesla's occasional invalid `eeoCopyUrl` value.
+- Successful submissions are written to `submitted_jobs.json` so later full reruns skip those requisition IDs.
 - If Tesla shows a new or unusual question page, stop and inspect before blindly continuing.
